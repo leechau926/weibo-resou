@@ -1,19 +1,16 @@
 import requests
 from bs4 import BeautifulSoup
 import time
+import csv
 
 url = 'https://s.weibo.com/top/summary'
-web_data = requests.get(url).content
+web_data = requests.get(url).content.decode('utf-8')
 soup = BeautifulSoup(web_data, 'lxml')
 tbody = soup.find(name='tbody')
 tr_list = tbody.find_all(name='tr')
 
-t_title = soup.find('title').text
-print(t_title)
-
+resou_lists = []
 localtime = time.asctime( time.localtime(time.time()) )
-print ("本地时间为 :", localtime)
-
 for item in tr_list:
 	if item.find(attrs={'class': 'td-01 ranktop'}):
 		num = item.find(attrs={'class': 'td-01 ranktop'}).get_text()
@@ -25,11 +22,20 @@ for item in tr_list:
 	else:
 		hot = ''
 	if item.find(attrs={'class': 'td-03'}).i:
-		type = item.find(attrs={'class': 'td-03'}).i.get_text()
+		charac = item.find(attrs={'class': 'td-03'}).i.get_text()
 	else:
-		type = ' '
-	print('序号：' + num)
-	print('关键词：' + keyword)
-	print('热度：' + hot)
-	print('特征：' + type)
-	print('********************')
+		charac = ' '
+	resou_item = {
+		'time': localtime,
+		'number': num,
+		'keyword': keyword,
+		'hot': hot,
+		'character': charac
+	}
+	resou_lists.append(resou_item)
+
+headers = ['time', 'number', 'keyword', 'hot', 'character']
+with open('resou.csv', 'a') as f:
+    f_csv = csv.DictWriter(f, headers)
+    # f_csv.writeheader()
+    f_csv.writerows(resou_lists)
